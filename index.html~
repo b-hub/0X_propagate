@@ -6,7 +6,7 @@
 	
 </head>
 <body style="background-color: black; color: white;">
-<!--<a id="dlAnchorElem" style="display:none;"></a>-->
+<a id="dlAnchorElem" style="display:none;"></a>
 <label>Exaggerate</label><input type="checkbox" onclick="toggleExaggerate(this.checked)"/>
 <script src="0X.js"></script>
 </body>

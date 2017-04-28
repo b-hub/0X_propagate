@@ -140,6 +140,7 @@ function toRGB(channels) {
 ctx.strokeStyle = "white";
 var levelDicts = [];
 var col = populateDrawDict(levelDicts, [], {x: 0, y: 0, width: c.width, height: c.height});
+downloadString(JSON.stringify(levelDicts[0]), "data.json");
 render(ctx, levelDicts);
 var originalCanvas = copyCanvas(c);
 console.log(levelDicts.length);

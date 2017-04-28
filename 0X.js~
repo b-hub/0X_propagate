@@ -96,7 +96,7 @@ function populateDrawDict(levelDicts, path, ref) {
 }
 
 function render(ctx, levelDicts) {
-	for (var level = levelDicts.length-1; level >= 0; level--) {
+	for (var level = 0; level < levelDicts.length; level++) {
 		var drawDict = levelDicts[level];
 		for (col in drawDict) {
 			ctx.fillStyle = "#" + col;
@@ -140,6 +140,7 @@ function toRGB(channels) {
 ctx.strokeStyle = "white";
 var levelDicts = [];
 var col = populateDrawDict(levelDicts, [], {x: 0, y: 0, width: c.width, height: c.height});
+downloadString(JSON.stringify(levelDicts), "data.json");
 render(ctx, levelDicts);
 var originalCanvas = copyCanvas(c);
 console.log(levelDicts.length);
