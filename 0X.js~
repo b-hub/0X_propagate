@@ -46,63 +46,67 @@ function gameover(path) {
 	});
 }
 
-function render(ctx, path, ref) {
+function populateDrawDict(levelDicts, path, ref) {
 	
+	var level = path.length;
+	if (levelDicts.length < level) {
+		levelDicts.push({});
+	}
+	var dict = levelDicts[level-1];
+	
+	var col;
+	var fill;
+	var rect = [ref.x, ref.y, ref.width, ref.height];
 	if (gameover(path)) {
-		var fill = (path.length % 2) ? [255,0,0] : [0,0,255];
-		ctx.fillStyle = toRGB(fill);
-		ctx.fillRect(ref.x, ref.y, ref.width, ref.height);
-		counts[path.length % 2]++;
-		return fill;
-	}
+		col = (level % 2) ? [255,0,0] : [0,0,255];
+		fill = (level % 2) ? "f00" : "00f";
 	
-	if (path.length == 9) {
-		var fill = [255,0,255];
-		ctx.fillStyle = toRGB(fill);
-		ctx.fillRect(ref.x, ref.y, ref.width, ref.height);
-		counts[2]++;
-		return fill;	
-	}
+	} else if (level == 9) {
+		col = [255,0,255];
+		fill = "f0f";
+	} else {
+		var subWidth = ref.width / 3;
+		var subHeight = ref.height / 3; 
+		var cols = [];
+		for (var i = 0; i < 9; i++) {
+			var subX = ref.x + subWidth * (i % 3);
+			var subY = ref.y + subHeight * Math.floor(i / 3);
+			var depth = path.indexOf(i);
+			if (depth > -1) {
 	
-	var subWidth = ref.width / 3;
-	var subHeight = ref.height / 3; 
-	
-	var cols = [];
-	var outsiders = [];
-	
-	for (var i = 0; i < 9; i++) {
-		var subX = ref.x + subWidth * (i % 3);
-		var subY = ref.y + subHeight * Math.floor(i / 3);
-		var depth = path.indexOf(i);
-		if (depth > -1) {
-			outsiders.push({
-				x: subX,
-				y: subY,
-				w: subWidth,
-				h: subHeight
-			});
+			} else {
+				cols.push(populateDrawDict(levelDicts, path.concat([i]), {x: subX, y: subY, width: subWidth, height: subHeight}));
+			}
+		}
+		col = cols.reduce(function(a, b) {
+			return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+		}, [0,0,0]).map(function(e){return e/cols.length;});
 		
-		} else {
-			cols.push(render(ctx, path.concat([i]), {x: subX, y: subY, width: subWidth, height: subHeight}));
+		fill = col.map(function(byte){
+			var hexStr = Number(Math.floor(byte)).toString(16);
+			return (hexStr.length === 2) ? hexStr : "0" + hexStr;
+		}).join("");
+	}
+	
+	if (level === 0) return col;
+	
+	if (dict[fill] !== undefined) dict[fill].push(rect);
+	else dict[fill] = [rect];
+	return col;
+}
+
+function render(ctx, levelDicts) {
+	for (var level = levelDicts.length-1; level >= 0; level--) {
+		var drawDict = levelDicts[level];
+		for (col in drawDict) {
+			ctx.fillStyle = "#" + col;
+			var rects = drawDict[col];
+			for (var i = 0; i < rects.length; i++) {
+				var rect = rects[i];
+				ctx.fillRect(rect[0], rect[1], rect[2], rect[3]);
+			}
 		}
 	}
-	
-	var col = cols.reduce(function(a, b) {
-		return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];
-	}, [0,0,0]).map(function(e){return e/cols.length;});
-	
-	//if (path.length < 4) return col;
-	
-	ctx.fillStyle = toRGB(col);
-	for (var i = 0; i < outsiders.length; i++) {
-		var outsider = outsiders[i];
-		ctx.fillRect(outsider.x,
-								 outsider.y,
-								 outsider.w,
-								 outsider.h);
-	}
-
-	return col;
 }
 
 function exaggerateCol(col) {
@@ -134,9 +138,11 @@ function toRGB(channels) {
 }
 
 ctx.strokeStyle = "white";
-var col = render(ctx, [], {x: 0, y: 0, width: c.width, height: c.height});
+var levelDicts = [];
+var col = populateDrawDict(levelDicts, [], {x: 0, y: 0, width: c.width, height: c.height});
+render(ctx, levelDicts);
 var originalCanvas = copyCanvas(c);
-console.log(col);
+console.log(levelDicts.length);
 console.log("done");
 console.log(counts);
 
