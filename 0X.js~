@@ -46,53 +46,82 @@ function gameover(path) {
 	});
 }
 
-function populateDrawDict(levelDicts, path, ref) {
-	
+function calculateWinTree() {
+	return calculateWinTreeHelper([]);
+}
+
+function calculateWinTreeHelper(path) {
+	var nodeId = path.join("");
 	var level = path.length;
+
+	if (gameover(path)) {
+		return new Node(nodeId, (level % 2) ? 1 : 0);
+	}
+	
+	if (level == 9) {
+		return new Node(nodeId, 0.5);
+	}
+	
+	var node = new Node(nodeId);
+	
+	for (var i = 0; i < 9; i++) {
+		if (path.indexOf(i) > -1) continue;
+		node.children.push(calculateWinTreeHelper(path.concat([i])));
+	}
+	
+	node.score = node.children.map(function(n){
+		return n.score;
+	}).reduce(function(a,b){
+		return a + b;
+	}, 0) / node.children.length;
+	
+	return node;
+}
+
+function Node(id, score) {
+	this.id = id;
+	this.score = score !== undefined ? score : 0;
+	this.children = [];
+}
+
+function populateDrawDict(levelDicts, node, ref) {
+	var score = node.score;
+	var level = node.id.length;
 	if (levelDicts.length < level) {
 		levelDicts.push({});
 	}
 	var dict = levelDicts[level-1];
 	
-	var col;
-	var fill;
+	var drawOffset = 60 * (1-Math.abs(0.5 - score)/0.5);
+	var fill = rgbArrToHexStr([255 * score + drawOffset, 0, 255 * (1-score) + drawOffset]);
 	var rect = [ref.x, ref.y, ref.width, ref.height];
-	if (gameover(path)) {
-		col = (level % 2) ? [255,0,0] : [0,0,255];
-		fill = (level % 2) ? "f00" : "00f";
 	
-	} else if (level == 9) {
-		col = [255,0,255];
-		fill = "f0f";
-	} else {
+	if (node.children.length) {
 		var subWidth = ref.width / 3;
 		var subHeight = ref.height / 3; 
 		var cols = [];
-		for (var i = 0; i < 9; i++) {
-			var subX = ref.x + subWidth * (i % 3);
-			var subY = ref.y + subHeight * Math.floor(i / 3);
-			var depth = path.indexOf(i);
-			if (depth > -1) {
-	
-			} else {
-				cols.push(populateDrawDict(levelDicts, path.concat([i]), {x: subX, y: subY, width: subWidth, height: subHeight}));
-			}
+		for (var i = 0; i < node.children.length; i++) {
+			var child = node.children[i];
+			var move = parseInt(child.id[child.id.length-1]);
+			var subX = ref.x + subWidth * (move % 3);
+			var subY = ref.y + subHeight * Math.floor(move / 3);
+			populateDrawDict(levelDicts, child, {x: subX, y: subY, width: subWidth, height: subHeight});
 		}
-		col = cols.reduce(function(a, b) {
-			return [a[0]+b[0],a[1]+b[1],a[2]+b[2]];
-		}, [0,0,0]).map(function(e){return e/cols.length;});
-		
-		fill = col.map(function(byte){
-			var hexStr = Number(Math.floor(byte)).toString(16);
-			return (hexStr.length === 2) ? hexStr : "0" + hexStr;
-		}).join("");
 	}
 	
-	if (level === 0) return col;
+	if (level === 0) return;
 	
 	if (dict[fill] !== undefined) dict[fill].push(rect);
 	else dict[fill] = [rect];
-	return col;
+}
+
+function rgbArrToHexStr(arr) {
+	return arr.map(byteToHex).join("");
+}
+
+function byteToHex(byte) {
+	var hexStr = Number(Math.floor(byte)).toString(16);
+	return (hexStr.length === 2) ? hexStr : "0" + hexStr;
 }
 
 function render(ctx, levelDicts) {
@@ -139,8 +168,10 @@ function toRGB(channels) {
 
 ctx.strokeStyle = "white";
 var levelDicts = [];
-var col = populateDrawDict(levelDicts, [], {x: 0, y: 0, width: c.width, height: c.height});
-downloadString(JSON.stringify(levelDicts), "data.json");
+var tree = calculateWinTree();
+console.log(tree);
+var col = populateDrawDict(levelDicts, tree, {x: 0, y: 0, width: c.width, height: c.height});
+//downloadString(JSON.stringify(levelDicts[0]), "data.json");
 render(ctx, levelDicts);
 var originalCanvas = copyCanvas(c);
 console.log(levelDicts.length);
