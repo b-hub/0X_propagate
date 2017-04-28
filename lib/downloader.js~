@@ -1,11 +1,10 @@
 function downloadString(str, filename) {
-	var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(str);
+	//var url = "data:text/json;charset=utf-8," + encodeURIComponent(str);
+	var url = URL.createObjectURL( new Blob( [text], {type:'text/plain'} ) );
 	var downloadElem = document.createElement('A');
-	downloadElem.setAttribute("href", dataStr);
+	downloadElem.setAttribute("href", url);
 	downloadElem.setAttribute("download", filename);
 	document.body.appendChild(downloadElem);
 	downloadElem.click();
 	document.body.removeChild(downloadElem);
 }
-
-//JSON.stringify(storageObj)

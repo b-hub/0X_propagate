@@ -8,8 +8,6 @@ c.style.border = "1px solid white";
 document.body.appendChild(c);
 
 var ctx = c.getContext('2d');
-var fCols = fractalCols(9);
-var counts = [0, 0, 0];
 var gameoverMapping = [
 	[[1,2],[4,8],[3,6]],
 	[[0,2],[4,7]],
@@ -21,16 +19,6 @@ var gameoverMapping = [
 	[[6,8],[1,4]],
 	[[6,7],[5,2],[0,4]],
 ];
-
-function fractalCols(n) {
-		cols = [];
-		for (var i = n; i > 0; i--) {	
-			var x = Number(Math.floor(i / n * 255)).toString(16);
-			cols.push("#" + x + x + x);
-		}
-		
-		return cols;
-}
 
 function gameover(path) {
 	if (path.length < 5) return false;
@@ -92,8 +80,8 @@ function populateDrawDict(levelDicts, node, ref) {
 	}
 	var dict = levelDicts[level-1];
 	
-	var drawOffset = 60 * (1-Math.abs(0.5 - score)/0.5);
-	var fill = rgbArrToHexStr([255 * score + drawOffset, 0, 255 * (1-score) + drawOffset]);
+	var drawOffset = 1-Math.abs(0.5 - score)/0.5;
+	var fill = rgbArrToHexStr([255 * score + drawOffset * 127, drawOffset * 255, 255 * (1-score) - drawOffset * 127]);
 	var rect = [ref.x, ref.y, ref.width, ref.height];
 	
 	if (node.children.length) {
@@ -150,16 +138,6 @@ function exaggerate(x) {
 	return - 2.577643 * Math.pow(x, 3) + 3.866464 * Math.pow(x, 2) - 0.2931411 * x + 0.002159838;
 }
 
-console.log(0, exaggerate(0));
-console.log(1, exaggerate(1));
-console.log(0.5, exaggerate(0.5));
-console.log(0.75, exaggerate(0.75));
-console.log(0.25, exaggerate(0.25));
-console.log(0.1, exaggerate(0.1));
-console.log(0.9, exaggerate(0.9));
-
-console.log(exaggerateCol([200, 0, 100]));
-
 function toRGB(channels) {
 	return "rgb(" + channels.map(function(e){
 		return Math.floor(e);
@@ -168,15 +146,16 @@ function toRGB(channels) {
 
 ctx.strokeStyle = "white";
 var levelDicts = [];
-var tree = calculateWinTree();
+
+var content = document.getElementById('gameTree').innerHTML;
+var tree = content.length ? JSON.parse(content) : calculateWinTree();
 console.log(tree);
 var col = populateDrawDict(levelDicts, tree, {x: 0, y: 0, width: c.width, height: c.height});
-//downloadString(JSON.stringify(levelDicts[0]), "data.json");
+//downloadString(JSON.stringify(tree), "gameTree.json");
 render(ctx, levelDicts);
 var originalCanvas = copyCanvas(c);
 console.log(levelDicts.length);
 console.log("done");
-console.log(counts);
 
 function toggleExaggerate(isExaggerated) {
 	ctx.clearRect(0,0,c.width, c.height);
