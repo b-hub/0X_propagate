@@ -2,14 +2,20 @@
 <html>
 <head>
 
-	<script src="lib/downloader.js"></script>	
+	<link rel="stylesheet" type="text/css" href="main.css">
+	<script src="lib/utils/downloader.js"></script>	
 	
 </head>
 <body style="background-color: black; color: white;">
 
-<script id="gameTree" type="application/json" src="/resources/gameTree.json"></script>
+<script id="gameTree" type="application/json" src="resources/gameTree.json"></script>
 
-<label>Exaggerate</label><input type="checkbox" onclick="toggleExaggerate(this.checked)"/>
+<div id="toggleContainer">
+	<label>Exaggerate</label><input type="checkbox" onclick="toggleExaggerate(this.checked)"/>
+</div>
+
+<div id="canvasContainer"></div>
+
 <script src="0X.js"></script>
 </body>
 </html>
