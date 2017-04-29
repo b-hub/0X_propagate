@@ -1,0 +1,7 @@
+#canvasContainer {
+	position: relative;
+}
+
+.canvasLayer {
+	position: absolute;
+}
