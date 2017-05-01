@@ -3,13 +3,15 @@
 <head>
 
 	<link rel="stylesheet" type="text/css" href="main.css">
+
+    <script src="lib/jquery-3.2.1.min.js"></script>
 	<script src="lib/utils/downloader.js"></script>
 	<script src="lib/game/gameTree.js"></script>		
 	
 </head>
 <body style="background-color: black; color: white;">
 
-<script id="gameTree" type="application/json" src="resources/gameTree.json"></script>
+<div id="legendContainer"></div>
 
 <div id="toggleContainer">
 	<label>Exaggerate</label><input type="checkbox" onclick="toggleExaggerate(this.checked)"/>

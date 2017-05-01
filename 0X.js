@@ -7,6 +7,28 @@ if (namespaces.some(function(ns){ return ns === undefined; })) {
 	main();
 }
 
+function main() {
+    console.log("start");
+    createColourLegend(document.getElementById('legendContainer'), colourMapping);
+
+    var levelDicts = [];
+
+    var content = $.get('resources/gameTree.json');
+    var tree = content.length ? JSON.parse(content) : game.calculateWinTree();
+    console.log(tree);
+    var options = { drawSubpixels: false };
+    var col = populateDrawDict(levelDicts, tree, { x: 0, y: 0, width: size, height: size }, options);
+    //utils.downloadString(JSON.stringify(tree), "gameTree.json");
+    var cs = createToggleableLayers(levelDicts.length, size, document.getElementById('canvasContainer'), document.getElementById('toggleContainer'));
+    for (var i = 0; i < cs.length; i++) {
+        render(cs[i].getContext('2d'), levelDicts[i]);
+    }
+
+    //var originalCanvas = utils.copyCanvas(c);
+    console.log(levelDicts.length);
+    console.log("done");
+}
+
 function colourMapping(score) {
 	var drawOffset = 1-Math.abs(0.5 - score)/0.5;
 	return [255 * score + drawOffset * 127, drawOffset * 255, 255 * (1-score) - drawOffset * 127];
@@ -125,14 +147,10 @@ function createColourLegend(container, colourFunction) {
 		pixelLine = pixelLine.concat(colourFunction(i/999).map(function(x){return Math.floor(x);})).concat([255]);
 	}
 	
-	console.log(pixelLine);
-	
 	var data = [];
 	for (var i = 0; i < canvas.height; i++) {
 		data = data.concat(pixelLine);
 	}
-	
-	console.log(data);
 	
 	var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	
@@ -141,33 +159,8 @@ function createColourLegend(container, colourFunction) {
 	}
 	
 	//img.data = data; can't do this for some reason...
-	console.log(img.data, colourFunction(500/999).map(function(x){return Math.floor(x);}));
 	ctx.putImageData(img, 0, 0);
 }
-
-function main() {
-	console.log("start");
-	createColourLegend(document.body, colourMapping);
-	
-	var levelDicts = [];
-
-	var content = document.getElementById('gameTree').innerHTML;
-	var tree = content.length ? JSON.parse(content) : game.calculateWinTree();
-	console.log(tree);
-	var options = {drawSubpixels: false};
-	var col = populateDrawDict(levelDicts, tree, {x: 0, y: 0, width: size, height: size}, options);
-	//utils.downloadString(JSON.stringify(tree), "gameTree.json");
-	var cs = createToggleableLayers(levelDicts.length, size, document.getElementById('canvasContainer'), document.getElementById('toggleContainer'));
-	for (var i = 0; i < cs.length; i++) {
-		render(cs[i].getContext('2d'), levelDicts[i]);
-	}
-
-	//var originalCanvas = utils.copyCanvas(c);
-	console.log(levelDicts.length);
-	console.log("done");
-}
-
-
 
 function toggleExaggerate(isExaggerated) {
 	return;
