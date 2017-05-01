@@ -7,6 +7,11 @@ if (namespaces.some(function(ns){ return ns === undefined; })) {
 	main();
 }
 
+function colourMapping(score) {
+	var drawOffset = 1-Math.abs(0.5 - score)/0.5;
+	return [255 * score + drawOffset * 127, drawOffset * 255, 255 * (1-score) - drawOffset * 127];
+}
+
 function populateDrawDict(levelDicts, node, ref, options) {
 	var score = node.score;
 	var level = node.id.length;
@@ -15,8 +20,8 @@ function populateDrawDict(levelDicts, node, ref, options) {
 	}
 	var dict = levelDicts[level-1];
 	
-	var drawOffset = 1-Math.abs(0.5 - score)/0.5;
-	var fill = rgbArrToHexStr([255 * score + drawOffset * 127, drawOffset * 255, 255 * (1-score) - drawOffset * 127]);
+	
+	var fill = rgbArrToHexStr(colourMapping(score));
 	var rect = [ref.x, ref.y, ref.width, ref.height];
 	
 	if (node.children.length) {
@@ -108,8 +113,42 @@ function toRGB(channels) {
 	});
 }
 
+function createColourLegend(container, colourFunction) {
+	var canvas = document.createElement('CANVAS');
+	canvas.width = size;
+	canvas.height = 100;
+	container.appendChild(canvas);
+	var ctx = canvas.getContext('2d');
+	
+	var pixelLine = [];
+	for (var i = 0; i < canvas.width; i++) {
+		pixelLine = pixelLine.concat(colourFunction(i/999).map(function(x){return Math.floor(x);})).concat([255]);
+	}
+	
+	console.log(pixelLine);
+	
+	var data = [];
+	for (var i = 0; i < canvas.height; i++) {
+		data = data.concat(pixelLine);
+	}
+	
+	console.log(data);
+	
+	var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	
+	for (var i = 0; i < img.data.length; i++) {
+		img.data[i] = data[i];
+	}
+	
+	//img.data = data; can't do this for some reason...
+	console.log(img.data, colourFunction(500/999).map(function(x){return Math.floor(x);}));
+	ctx.putImageData(img, 0, 0);
+}
+
 function main() {
 	console.log("start");
+	createColourLegend(document.body, colourMapping);
+	
 	var levelDicts = [];
 
 	var content = document.getElementById('gameTree').innerHTML;
